@@ -8,15 +8,20 @@ class Program
 {
     static void Main()
     {
-        // Получаем текущее время и округляем его до ближайшего интервала 5 секунд
-        DateTime currentTime = DateTime.Now;
-        var roundedTiks = RoundToNearestInterval(currentTime, TimeSpan.FromSeconds(5));
+        var time = new DateTime(2024, 1, 1, 0, 59, 59);
+        for (int i = 0; i < 15; i++)
+        {
+            // Получаем текущее время и округляем его до ближайшего интервала 5 секунд
+            DateTime currentTime = time;
+            var roundedTiks = RoundToNearestInterval(currentTime, TimeSpan.FromSeconds(5));
 
-        // Вычисляем хэш от округленного времени
-        var hashedTime = CalculateHash(roundedTiks.ToString());
+            // Вычисляем хэш от округленного времени
+            var hashedTime = CalculateHash(roundedTiks.ToString());
 
-        Console.WriteLine("Текущее время: " + currentTime);
-        Console.WriteLine("Хэш от времени: " + hashedTime);
+            Console.WriteLine("Текущее время: " + currentTime + "Хэш: " + hashedTime);
+
+            time = time.AddSeconds(1);
+        }
     }
 
     // Округляем время до ближайшего интервала
