@@ -1,0 +1,16 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message Address {
+  int64 Id = 1;
+  string Line2 = 2;
+}
+
+message Person {
+  int64 Id = 1;
+  string Name = 2;
+  google.protobuf.Timestamp CurrentDate = 3;
+  Address Address = 4;
+  string PersonGuid = 5;
+}
