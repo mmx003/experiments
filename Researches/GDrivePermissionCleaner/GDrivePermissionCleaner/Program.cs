@@ -5,12 +5,12 @@ using Google.Apis.Util.Store;
 
 namespace GoogleDrivePermissionsReset
 {
-    internal class Program
+    class Program
     {
-        private static string[] Scopes = { DriveService.Scope.Drive };
-        private static string ApplicationName = "Google Drive API .NET Permissions Reset";
+        static string[] Scopes = { DriveService.Scope.Drive };
+        static string ApplicationName = "Google Drive API .NET Permissions Reset";
 
-        private static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             // Проверяем, был ли передан параметр -r
             string rootFolderId = GetRootFolderIdFromArgs(args);
@@ -43,9 +43,11 @@ namespace GoogleDrivePermissionsReset
 
             // Запуск рекурсивного сброса разрешений
             await RemovePermissionsRecursively(service, rootFolderId);
+            
+            Console.WriteLine("Готово");
         }
 
-        private static string GetRootFolderIdFromArgs(string[] args)
+        static string GetRootFolderIdFromArgs(string[] args)
         {
             // Находим аргумент -r и возвращаем значение после него
             for (int i = 0; i < args.Length; i++)
@@ -58,30 +60,43 @@ namespace GoogleDrivePermissionsReset
             return null;
         }
 
-        private static async Task RemovePermissionsRecursively(DriveService service, string folderId)
+        static async Task RemovePermissionsRecursively(DriveService service, string folderId)
         {
             try
             {
-                // Получаем список содержимого папки
-                var request = service.Files.List();
-                request.Q = $"'{folderId}' in parents and trashed = false";
-                request.Fields = "files(id, name, mimeType)";
-
-                var result = await request.ExecuteAsync();
-                IList<Google.Apis.Drive.v3.Data.File> files = result.Files;
-
-                // Обрабатываем каждый файл/папку
-                foreach (var file in files)
+                Console.WriteLine($"Начало обработки папки: {folderId}");
+                int filesProcessedCount = 0;
+                string pageToken = null;
+                do
                 {
-                    Console.WriteLine($"Обработка: {file.Name} ({file.Id})");
-                    await RemovePermissions(service, file.Id);
+                    // Получаем список содержимого папки
+                    var request = service.Files.List();
+                    request.Q = $"'{folderId}' in parents and trashed = false";
+                    request.Fields = "nextPageToken, files(id, name, mimeType)";
+                    request.PageSize = 100;
+                    request.PageToken = pageToken;
 
-                    // Если это папка, обрабатываем ее рекурсивно
-                    if (file.MimeType == "application/vnd.google-apps.folder")
+                    var result = await request.ExecuteAsync();
+                    IList<Google.Apis.Drive.v3.Data.File> files = result.Files;
+
+                    // Обрабатываем каждый файл/папку
+                    foreach (var file in files)
                     {
-                        await RemovePermissionsRecursively(service, file.Id);
+                        Console.WriteLine($"Обработка: {file.Name} ({file.Id})");
+                        await RemovePermissions(service, file.Id);
+                        filesProcessedCount++;
+
+                        // Если это папка, обрабатываем ее рекурсивно
+                        if (file.MimeType == "application/vnd.google-apps.folder")
+                        {
+                            await RemovePermissionsRecursively(service, file.Id);
+                        }
                     }
-                }
+
+                    pageToken = result.NextPageToken;
+                } while (pageToken != null);
+
+                Console.WriteLine($"Завершена обработка папки: {folderId}. Обработано файлов: {filesProcessedCount}");
             }
             catch (Exception e)
             {
@@ -89,7 +104,7 @@ namespace GoogleDrivePermissionsReset
             }
         }
 
-        private static async Task RemovePermissions(DriveService service, string fileId)
+        static async Task RemovePermissions(DriveService service, string fileId)
         {
             try
             {
