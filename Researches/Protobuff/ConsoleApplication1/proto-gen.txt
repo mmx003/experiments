@@ -1,1 +1,0 @@
-D:\Work\vcpkg\installed\x64-windows\tools\protobuf\protoc.exe -I=D:\Work\Protobuff\WebApplication1\ --cpp_out=D:\Work\Protobuff\ConsoleApplication1\ D:\Work\Protobuff\WebApplication1\sample.proto
